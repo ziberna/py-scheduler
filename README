@@ -1,5 +1,6 @@
 py-scheduler is a cron-like scheduler written in Python. It is not only for
-users but also for developers. See CamSchedule for an example.
+users but also for developers.
+See CamScheduler (https://github.com/Kantist/CamScheduler) for an example.
 
 I've tested py-scheduler with Python 2.7.2 and Python 3.2.2; these are the
 latest stable versions of Python. py-scheduler is thus Python 2/3 compatible.
