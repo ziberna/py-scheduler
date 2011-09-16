@@ -8,7 +8,7 @@ sec    min    hour    weekday    day    month    function    args    kwargs
 *      *      *       *          *      *        myfunc      5.6     y=[],z=3
 
 The above example would execute this every second:
-myfunc(3.5, y=[], z=3)
+myfunc(5.6, y=[], z=3)
 
 Format for time fields is very similar to crontab. It supports list of patterns
 (<pattern1>,<pattern2>; e.g. *5,*0), ranges (<start>-<end>; e.g. 5-49) and
