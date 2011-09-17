@@ -187,9 +187,10 @@ def parse(text):
     return jobs
 
 threads = []
-def start(jobs = []):
+def start(jobs = [], daemon=True):
     global threads
     for job in jobs:
         thread = threading.Thread(target=job.start)
-        threads.append(thread)
+        thread.daemon = True
         thread.start()
+        threads.append(thread)
