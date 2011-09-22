@@ -19,37 +19,34 @@ import re
 
 import time
 import datetime
+import threading
+import traceback
 
 # Py 2/3 compatibility:
 try:
     import datecalc # Py 2
+    from tools import iscallable
 except ImportError:
     import scheduler.datecalc as datecalc # Py 3
-
-import threading
-import traceback
+    from scheduler.tools import iscallable
 
 interval = 300.0
 
 class Job(object):    
-    def __init__(self, string='', seconds=[], minutes=[], hours=[], \
-                 weekdays=[], days=[], months=[], function=None, args=(), \
-                 kwargs={}, enabled=True, cancel=False):
-        # Parse string
-        if string:
-            self.seconds, self.minutes, self.hours, self.weekdays, self.days, \
-            self.months, self.function, self.args, self.kwargs = Job.parse(string)
-        # Extend time fields with supplied lists
-        self.seconds += seconds
-        self.minutes += minutes
-        self.hours += hours
-        self.weekdays += weekdays
-        self.days += days
-        self.months += months
-        # Overwrite function fields if supplied
-        if function: self.function = function
-        if args: self.args = args
-        if kwargs: self.kwargs = kwargs
+    def __init__(self, seconds=[], minutes=[], hours=[], weekdays=[], days=[], \
+                 months=[], function=None, args=(), kwargs={}, enabled=True, \
+                 cancel=False):
+        # Time fields
+        self.seconds = seconds
+        self.minutes = minutes
+        self.hours = hours
+        self.weekdays = weekdays
+        self.days = days
+        self.months = months
+        # Action fields
+        self.function = function
+        self.args = args
+        self.kwargs = kwargs
         # Set enabled and cancel flag
         self.enabled = enabled
         self.cancel = cancel
@@ -74,6 +71,9 @@ class Job(object):
             self.next = datecalc.nextjob(self, now)
     
     def do(self):
+        # Return if not callable
+        if not iscallable(self.function):
+            return
         # Return if disabled
         if not self.enabled: return
         # Return and reset cancel flag if canceled
@@ -81,8 +81,10 @@ class Job(object):
             cancel = False
             return
         # Try to do the job
-        try: self.function(*self.args, **self.kwargs)
-        except: traceback.print_exc()
+        try:
+            self.function(*self.args, **self.kwargs)
+        except:
+            traceback.print_exc()
     
     @staticmethod
     def parse_pattern(string, bottom, top):
@@ -154,7 +156,12 @@ class Job(object):
         months = Job.parse_list(fields[5], 1, 12)
         
         # Parse function field
-        function = fields[6] if fields[6] else None
+        if fields[6] == '':
+            function = func_repo._get_('default')
+        else:
+            function = func_repo._get_(fields[6])
+            if function == None:
+                function = fields[6]
         # Parse args field
         try:
             args = tuple(eval(arg) for arg in fields[7].split(','))
@@ -169,7 +176,24 @@ class Job(object):
                     kwargs[kwarg[0]] = eval(kwarg[1])
         except: pass
         
-        return seconds, minutes, hours, weekdays, days, months, function, args, kwargs
+        return Job(seconds, minutes, hours, weekdays, days, months, function, args, kwargs)
+
+class func_repo(object):
+    @staticmethod        
+    def _get_(name=None):
+        attributes = vars(func_repo)
+        
+        if name != None:
+            if name in attributes and not name.startswith('_') and iscallable(attributes[name]):
+                return attributes[name]
+            else:
+                return None
+        
+        functions = {}
+        for name in attributes:
+            if not name.startswith('_') and iscallable(attributes[name]):
+                functions[name] = attributes[name]
+        return functions
 
 def jobs(path='', text='', jobs=[]):
     if path:
@@ -183,7 +207,7 @@ def jobs(path='', text='', jobs=[]):
 def parse(text):
     strings = [string.strip() for string in text.split('\n')]
     strings = [string for string in strings if string != '' and not string.startswith('#')]
-    jobs = [Job(string) for string in strings]
+    jobs = [Job.parse(string) for string in strings]
     return jobs
 
 threads = []
@@ -191,6 +215,6 @@ def start(jobs = [], daemon=True):
     global threads
     for job in jobs:
         thread = threading.Thread(target=job.start)
-        thread.daemon = True
+        thread.daemon = daemon
         thread.start()
         threads.append(thread)

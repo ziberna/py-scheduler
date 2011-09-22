@@ -16,6 +16,31 @@ increments (<pattern>/<increment> or just /<increment> for whole range; e.g.
 5-49/11,*7/5,/3).
 Weekdays and days can be set for same job (unlike cron).
 
+There are two ways to set functions. One way is add whichever functions may
+be written in schedule table to the function repository. Example:
+
+import scheduler
+# Add my_function to scheduler's function repository as 'myfunc'
+scheduler.function.myfunc = my_function
+
+This is recommended. py-schedule will look for functions in function repository
+by function name written in schedule table. If it doesn't find one, which brings
+us to the second way of setting function, it will set the name (string) to
+function itself. That way you can set function of a job by checking the name
+yourself.
+
+You may want to set default function for schedule entries that have no function
+defined. To do this, simply write:
+
+scheduler.function.default = my_default_function
+
+NOTE: You should add functions to function repository before parsing any tables,
+i.e. before calling scheduler.jobs with path or text or scheduler.Job.parse. You
+can still add a function later, but be aware that functions for a certaing job
+are retrieved from repository only at the time of the parsing of that certain
+job. If you want to change function of already parsed job later, you have to
+change function attribute of a job (e.g. myjob1.function = some_other_function).
+
 
 See CamScheduler (https://github.com/Kantist/CamScheduler) for an example of a
 program using py-scheduler.

@@ -1,8 +1,6 @@
 import scheduler; datecalc = scheduler.datecalc
 import datetime
 
-jobs = scheduler.jobs(path='example_tab')
-
 def algo_test():
     now = datetime.datetime.now()
     for job in jobs:
@@ -16,7 +14,7 @@ delay_count = 0
 delay_max = 0.0
 delay_min = 1000000.0
 
-def action(text):
+def examplefunc(text):
     now = datetime.datetime.now()
     global delay_avg; global delay_count; global delay_max; global delay_min
     delay = now.microsecond
@@ -33,13 +31,10 @@ def action(text):
         print('Max:',delay_max)
         print('Min:',delay_min)
 
-def tab_test(text='Match!'):
-    job_id = 1
-    for job in jobs:
-        job.function = action
-        job.args = (str(job_id)+' '+text,)
-        job.kwargs = {}
-        job_id += 1
-    scheduler.start(jobs)
+scheduler.function.examplefunc = examplefunc
+jobs = scheduler.jobs(path='example_tab')
+
+def tab_test():
+    scheduler.start(jobs, daemon=False)
 
 tab_test()
