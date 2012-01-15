@@ -37,4 +37,6 @@ jobs = scheduler.jobs(path='example_tab')
 def tab_test():
     scheduler.start(jobs, daemon=False)
 
-tab_test()
+if __name__ == '__main__':
+    algo_test()
+    tab_test()
