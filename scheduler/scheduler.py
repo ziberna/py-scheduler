@@ -25,10 +25,8 @@ import traceback
 # Py 2/3 compatibility:
 try:
     import datecalc # Py 2
-    from tools import iscallable
 except ImportError:
     import scheduler.datecalc as datecalc # Py 3
-    from scheduler.tools import iscallable
 
 interval = 300.0
 
@@ -72,7 +70,7 @@ class Job(object):
     
     def do(self):
         # Return if not callable
-        if not iscallable(self.function):
+        if not callable(self.function):
             return
         # Return if disabled
         if not self.enabled: return
@@ -184,14 +182,14 @@ class func_repo(object):
         attributes = vars(func_repo)
         
         if name != None:
-            if name in attributes and not name.startswith('_') and iscallable(attributes[name]):
+            if name in attributes and not name.startswith('_') and callable(attributes[name]):
                 return attributes[name]
             else:
                 return None
         
         functions = {}
         for name in attributes:
-            if not name.startswith('_') and iscallable(attributes[name]):
+            if not name.startswith('_') and callable(attributes[name]):
                 functions[name] = attributes[name]
         return functions
 
